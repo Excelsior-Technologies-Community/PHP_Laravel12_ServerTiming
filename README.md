@@ -338,5 +338,8 @@ PHP_Laravel12_ServerTiming/
 
 Your PHP_Laravel12_ServerTiming Project is now ready!
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> development

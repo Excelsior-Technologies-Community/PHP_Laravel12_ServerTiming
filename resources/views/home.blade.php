@@ -1,52 +1,118 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Laravel Server Timing Demo</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-gray-100 font-sans">
+<!DOCTYPE html>
+<html lang="en">
 
-        <!-- Header -->
-        <header class="bg-indigo-600 text-white shadow-md">
-            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold">Laravel Server Timing Demo</h1>
-                <span class="text-sm">v1.0</span>
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- NAVBAR -->
+    <header class="bg-indigo-600 text-white shadow">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-semibold">User Management</h1>
+            <span class="text-sm opacity-80">Laravel 12</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+
+        <!-- SUCCESS ALERT -->
+        @if(session('success'))
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded mb-6 shadow-sm">
+                {{ session('success') }}
             </div>
-        </header>
+        @endif
 
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-6 py-10 space-y-8">
+        <!-- SEARCH BAR -->
+        <div class="bg-white border rounded-lg p-4 mb-6 shadow-sm">
+            <form method="GET" action="{{ route('home') }}" class="flex w-full gap-3">
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search by name or email"
+                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none">
 
-            <!-- Users List -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Users List</h2>
+                <button class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition">
+                    Search
+                </button>
+            </form>
+        </div>
 
-                @if($users->isEmpty())
-                    <p class="text-gray-500">No users found.</p>
-                @else
-                    <ul class="divide-y divide-gray-200">
-                        @foreach($users as $user)
-                            <li class="py-3 flex justify-between items-center">
-                                <span class="text-gray-700 font-medium">{{ $user->name }}</span>
-                                <span class="text-gray-500 text-sm">{{ $user->email }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
+        <!-- TABLE -->
+        <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+
+            <!-- TABLE HEADER -->
+            <div class="px-5 py-3 border-b bg-gray-50">
+                <h2 class="text-sm font-semibold text-gray-700">Users List</h2>
             </div>
 
-            <!-- Server Timing Metrics -->
-            <div class="bg-indigo-50 border-l-4 border-indigo-600 rounded p-6">
-                <h3 class="text-indigo-700 font-semibold mb-2">Server Timing Metrics</h3>
-                <ul class="text-gray-700 text-sm space-y-1">
-                    <li><strong>Total Execution:</strong> {{ $totalDuration }} ms</li>
-                    <li><strong>DB Queries:</strong> {{ $dbDuration }} ms</li>
-                </ul>
+            <table class="w-full text-sm">
+                <thead class="bg-gray-100 text-gray-600">
+                    <tr>
+                        <th class="px-5 py-3 text-left">ID</th>
+                        <th class="px-5 py-3 text-left">Name</th>
+                        <th class="px-5 py-3 text-left">Email</th>
+                        <th class="px-5 py-3 text-center">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @forelse($users as $user)
+                        <tr class="border-t hover:bg-indigo-50 transition">
+                            <td class="px-5 py-3">{{ $user->id }}</td>
+                            <td class="px-5 py-3 font-medium text-gray-900">{{ $user->name }}</td>
+                            <td class="px-5 py-3 text-gray-600">{{ $user->email }}</td>
+                            <td class="px-5 py-3 text-center">
+
+                                <form action="{{ route('users.delete', $user->id) }}" method="POST"
+                                    onsubmit="return confirm('Delete this user?')">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs hover:bg-red-200">
+                                        Delete
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-5 py-6 text-center text-gray-400">
+                                No users found
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            <!-- PAGINATION -->
+            <div class="px-5 py-3 border-t bg-gray-50">
+                {{ $users->links() }}
+            </div>
+        </div>
+
+        <!-- METRICS -->
+        <div class="grid grid-cols-2 gap-4 mt-6">
+
+            <div class="bg-white border rounded p-4 shadow-sm border-l-4 border-indigo-500">
+                <p class="text-xs text-gray-500">Total Execution Time</p>
+                <p class="text-lg font-semibold text-indigo-600 mt-1">
+                    {{ $totalDuration }} ms
+                </p>
             </div>
 
-        </main>
+            <div class="bg-white border rounded p-4 shadow-sm border-l-4 border-green-500">
+                <p class="text-xs text-gray-500">DB Query Time</p>
+                <p class="text-lg font-semibold text-green-600 mt-1">
+                    {{ $dbDuration }} ms
+                </p>
+            </div>
 
-    </body>
-    </html>
+        </div>
+
+    </main>
+
+</body>
+
+</html>
