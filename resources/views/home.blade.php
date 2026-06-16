@@ -1,118 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <title>User Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
 </head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
 
-<body class="bg-gray-50 text-gray-800">
-
-    <!-- NAVBAR -->
-    <header class="bg-indigo-600 text-white shadow">
+    <header class="bg-indigo-700 shadow">
         <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-semibold">User Management</h1>
+            <h1 class="text-xl font-semibold text-white">User Management</h1>
             <span class="text-sm opacity-80">Laravel 12</span>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-6 py-8">
 
-        <!-- SUCCESS ALERT -->
         @if(session('success'))
-            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded mb-6 shadow-sm">
+            <div class="bg-green-900 border-l-4 border-green-500 text-green-200 px-4 py-3 rounded mb-6 shadow-sm">
                 {{ session('success') }}
             </div>
         @endif
 
-        <!-- SEARCH BAR -->
-        <div class="bg-white border rounded-lg p-4 mb-6 shadow-sm">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6 shadow-sm">
             <form method="GET" action="{{ route('home') }}" class="flex w-full gap-3">
-                <input type="text" name="search" value="{{ $search }}" placeholder="Search by name or email"
-                    class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 outline-none">
-
-                <button class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-700 transition">
+                <input type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search by name or email"
+                    class="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 text-white outline-none">
+                <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded text-sm hover:bg-indigo-500 transition">
                     Search
                 </button>
             </form>
         </div>
 
-        <!-- TABLE -->
-        <div class="bg-white border rounded-lg overflow-hidden shadow-sm">
+        <form action="{{ route('users.bulkDelete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete selected users?')">
+            @csrf @method('DELETE')
 
-            <!-- TABLE HEADER -->
-            <div class="px-5 py-3 border-b bg-gray-50">
-                <h2 class="text-sm font-semibold text-gray-700">Users List</h2>
+            <div class="flex justify-between items-center mb-4">
+                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 shadow-sm transition">
+                    Delete Selected
+                </button>
             </div>
 
-            <table class="w-full text-sm">
-                <thead class="bg-gray-100 text-gray-600">
-                    <tr>
-                        <th class="px-5 py-3 text-left">ID</th>
-                        <th class="px-5 py-3 text-left">Name</th>
-                        <th class="px-5 py-3 text-left">Email</th>
-                        <th class="px-5 py-3 text-center">Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @forelse($users as $user)
-                        <tr class="border-t hover:bg-indigo-50 transition">
-                            <td class="px-5 py-3">{{ $user->id }}</td>
-                            <td class="px-5 py-3 font-medium text-gray-900">{{ $user->name }}</td>
-                            <td class="px-5 py-3 text-gray-600">{{ $user->email }}</td>
-                            <td class="px-5 py-3 text-center">
-
-                                <form action="{{ route('users.delete', $user->id) }}" method="POST"
-                                    onsubmit="return confirm('Delete this user?')">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button class="bg-red-100 text-red-600 px-3 py-1 rounded text-xs hover:bg-red-200">
-                                        Delete
-                                    </button>
-                                </form>
-
-                            </td>
-                        </tr>
-                    @empty
+            <div class="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-sm">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-700 text-gray-300">
                         <tr>
-                            <td colspan="4" class="px-5 py-6 text-center text-gray-400">
-                                No users found
-                            </td>
+                            <th class="px-5 py-3 text-left"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                            <th class="px-5 py-3 text-left">Name</th>
+                            <th class="px-5 py-3 text-left">Email</th>
+                            <th class="px-5 py-3 text-center">Action</th>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            <!-- PAGINATION -->
-            <div class="px-5 py-3 border-t bg-gray-50">
-                {{ $users->links() }}
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        @forelse($users as $user)
+                            <tr class="hover:bg-gray-750 transition">
+                                <td class="px-5 py-3"><input type="checkbox" name="ids[]" value="{{ $user->id }}"></td>
+                                <td class="px-5 py-3 font-medium text-white">{{ $user->name }}</td>
+                                <td class="px-5 py-3 text-gray-400">{{ $user->email }}</td>
+                                <td class="px-5 py-3 text-center">
+                                    <button type="button" onclick="event.preventDefault(); document.getElementById('delete-form-{{ $user->id }}').submit();" 
+                                            class="text-red-400 hover:text-red-300 text-xs font-bold">Delete</button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="px-5 py-6 text-center text-gray-500">No users found</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
+        </form>
+
+        @foreach($users as $user)
+            <form id="delete-form-{{ $user->id }}" action="{{ route('users.delete', $user->id) }}" method="POST" class="hidden">
+                @csrf @method('DELETE')
+            </form>
+        @endforeach
+
+        <div class="mt-4">
+            {{ $users->appends(['search' => $search ?? ''])->links() }}
         </div>
 
-        <!-- METRICS -->
-        <div class="grid grid-cols-2 gap-4 mt-6">
-
-            <div class="bg-white border rounded p-4 shadow-sm border-l-4 border-indigo-500">
-                <p class="text-xs text-gray-500">Total Execution Time</p>
-                <p class="text-lg font-semibold text-indigo-600 mt-1">
-                    {{ $totalDuration }} ms
-                </p>
+        <div class="grid grid-cols-2 gap-4 mt-8">
+            <div class="bg-gray-800 border border-gray-700 rounded p-4 shadow-sm border-l-4 border-indigo-500">
+                <p class="text-xs text-gray-400">Total Execution Time</p>
+                <p class="text-lg font-semibold text-indigo-400 mt-1">{{ $totalDuration }} ms</p>
             </div>
-
-            <div class="bg-white border rounded p-4 shadow-sm border-l-4 border-green-500">
-                <p class="text-xs text-gray-500">DB Query Time</p>
-                <p class="text-lg font-semibold text-green-600 mt-1">
-                    {{ $dbDuration }} ms
-                </p>
+            <div class="bg-gray-800 border border-gray-700 rounded p-4 shadow-sm border-l-4 border-green-500">
+                <p class="text-xs text-gray-400">DB Query Time</p>
+                <p class="text-lg font-semibold {{ $dbDuration > 50 ? 'text-red-400' : 'text-green-400' }} mt-1">{{ $dbDuration }} ms</p>
             </div>
-
         </div>
-
     </main>
 
+    <script>
+        function toggleAll(source) {
+            checkboxes = document.getElementsByName('ids[]');
+            for(var i=0; i<checkboxes.length; i++) checkboxes[i].checked = source.checked;
+        }
+    </script>
 </body>
-
 </html>
